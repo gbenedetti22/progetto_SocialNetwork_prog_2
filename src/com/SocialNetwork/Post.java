@@ -1,10 +1,7 @@
 package com.SocialNetwork;
 
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Post {
     private int id;
@@ -12,6 +9,7 @@ public class Post {
     private String text;
     private Timestamp timestamp;
     private Map<String, Set<String>> likes;
+    private Set<String> metionedUsers;
 
     public Post(int id, Utente author, String text) throws Exception {
         this.id = id;
@@ -20,8 +18,22 @@ public class Post {
         if(text.length() > 140)
             throw new Exception("Testo troppo lungo");
 
+        metionedUsers=buildTags();
         this.timestamp = new Timestamp(System.currentTimeMillis());
         likes=new HashMap<>();
+
+    }
+
+    private Set<String> buildTags() {
+        Set<String> users = new HashSet<>();
+
+        String[] splitted_text = text.split(" ");
+        for (String tag : splitted_text) {
+            if (tag.startsWith("@"))
+                users.add(tag);
+
+        }
+        return users;
     }
 
     public int getId() {
@@ -38,6 +50,10 @@ public class Post {
 
     public String getTimestamp() {
         return timestamp.toString();
+    }
+
+    public Set<String> getMetionedUsers() {
+        return metionedUsers;
     }
 
     public Map<String, Set<String>> getLikes() {
