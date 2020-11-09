@@ -7,17 +7,13 @@ public class Utente{
     private String username;
     private final Set<String> followers;
 
-    public Utente(String username) throws Exception {
+    public Utente(String username) {
         this.username = username;
         followers = new HashSet<>();
     }
 
     public Set<String> getFollowers() {
         return followers;
-    }
-
-    public void addFollower(Utente utente){
-        followers.add(utente.getUsername());
     }
 
     public String getUsername() {

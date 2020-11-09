@@ -5,70 +5,51 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Main {
-    final static SocialNetwork socialNetwork = new SocialNetwork();
+    private final static SocialNetwork socialNetwork = new SocialNetwork();
 
     public static void main(String[] args) throws Exception {
-        Utente carmine = socialNetwork.createUser("carmine12");
-        Utente pietro = socialNetwork.createUser("pietro_smusi");
-        Utente gabriele = socialNetwork.createUser("gabry98");
-        Utente lollo = socialNetwork.createUser("lollo76");
-        Utente nino = socialNetwork.createUser("nino_nino");
-        Utente crash = socialNetwork.createUser("bandicoot");
+        Utente crash = socialNetwork.createUser("crash");
+        Utente coco = socialNetwork.createUser("coco");
         Utente cortex = socialNetwork.createUser("cortex");
-        Utente steve_jobs = socialNetwork.createUser("jobs");
+        Utente brio = socialNetwork.createUser("brio");
+        Utente gabry1 = socialNetwork.createUser("gabry");
+        Utente gabry2 = new Utente("gabry");    //questa è la solita persona creata prima
 
-        socialNetwork.post(steve_jobs, "Hello World");
-        socialNetwork.post(cortex, "Ti prenderò Crash! @crash");
-        socialNetwork.post(gabriele, "Voglio la laurea");
-        socialNetwork.post(carmine, "Oggi ho fatto la pasta");
-        socialNetwork.post(gabriele, "perfavore");
+        Post cortexPost=socialNetwork.post(cortex, "Ti prenderò Crash! @crash");
+        Post cocoPost = socialNetwork.post(coco, "Crash si è rotto il computer");
+        Post gabryPost= socialNetwork.post(gabry2, "Questo è un test!");
 
-        socialNetwork.addLike(1, gabriele);
-        socialNetwork.addLike(1, lollo);
-        socialNetwork.addLike(1, pietro);
+        socialNetwork.addLike(cortexPost.getId(), crash);
+        socialNetwork.addLike(1, brio);
 
-        socialNetwork.addLike(2, gabriele);
-        socialNetwork.addLike(2, crash);
-        socialNetwork.addLike(2, nino);
-        socialNetwork.addLike(2, steve_jobs);
+        socialNetwork.addLike(cocoPost.getId(), crash);
 
-        socialNetwork.addLike(3, steve_jobs);
-        socialNetwork.addLike(3, lollo);
-        socialNetwork.addLike(3, nino);
-        socialNetwork.addLike(3, pietro);
-        socialNetwork.addLike(3, cortex);
+        socialNetwork.addLike(gabryPost.getId(), cortex);
+        socialNetwork.addLike(gabryPost.getId(), crash);
+        socialNetwork.addLike(gabryPost.getId(), brio);
 
-        Post post1 = new Post(1, pietro, "ciao a tutti, da @pietro e @crash");
-        Post post2 = new Post(1, steve_jobs, "Ciao mondo da");
-        Post post3 = new Post(1, gabriele, "Apple merda @jobs");
-        Post post4 = new Post(1, gabriele, "Scherzo @jobs");
+        System.out.println("influencers: "+socialNetwork.influencers());
+//========================================================================================================================
+        Utente dino = new Utente("dino");       //utente che non appartiene al social, esiste ma non si è registrato
+        Utente steve_jobs = new Utente("jobs");
 
-        post1.addLike(gabriele);
+        Post post1 = new Post(1, steve_jobs, "Ciao mondo");
+        Post post2 = new Post(1, gabry2, "Apple merda @jobs");
+        Post post3 = new Post(1, gabry2, "Scherzo @jobs");
 
-        post2.addLike(gabriele);
-        post2.addLike(lollo);
-        post2.addLike(nino);
+        post1.addLike(gabry2);
+
+        post2.addLike(dino);
+        post2.addLike(steve_jobs);
+        post2.addLike(coco);
 
         post3.addLike(crash);
-        post3.addLike(lollo);
-        post3.addLike(cortex);
+//        post3.addLike(gabry1);    // da errore
 
         ArrayList<Post> list = new ArrayList<>();
         list.add(post1);
         list.add(post2);
         list.add(post3);
-        list.add(post4);
-        ArrayList<String> words = new ArrayList<>();
-        words.add("laurea");
-        words.add("crash");
-
-        socialNetwork.printAllPosts();
-        System.out.println("guess Follower: "+socialNetwork.guessFollowers(list));
-        System.out.println("Gli influencers sono: "+socialNetwork.influencers());
-        System.out.println("Gli utenti mezionati sul social sono: "+socialNetwork.getMetionedusers());
-        System.out.println("Gli utenti mezionati sulla lista sono: "+socialNetwork.getMetionedusers(list));
-        System.out.println("Gabriele ha postato: "+socialNetwork.writtenBy(gabriele.getUsername()));
-        System.out.println("Nella lista, Gabriele ha postato: "+socialNetwork.writtenBy(list, gabriele.getUsername()));
-        System.out.println("La parola laurea e crash si trova in: "+socialNetwork.containing(words));
+        System.out.println(socialNetwork.guessFollowers(list));
     }
 }

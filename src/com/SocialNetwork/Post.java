@@ -1,22 +1,24 @@
 package com.SocialNetwork;
 
+import com.SocialNetwork.CustomException.SocialPostException;
+
 import java.sql.Timestamp;
 import java.util.*;
 
 public class Post {
-    private int id;
-    private Utente author;
-    private String text;
-    private Timestamp timestamp;
-    private Map<String, Set<String>> likes;
-    private Set<String> metionedUsers;
+    private final int id;
+    private final Utente author;
+    private final String text;
+    private final Timestamp timestamp;
+    private final Map<String, Set<String>> likes;
+    private final Set<String> metionedUsers;
 
-    public Post(int id, Utente author, String text) throws Exception {
+    public Post(int id, Utente author, String text) throws SocialPostException {
         this.id = id;
         this.author = author;
         this.text = text;
         if(text.length() > 140)
-            throw new Exception("Testo troppo lungo");
+            throw new SocialPostException("Testo troppo lungo");
 
         metionedUsers=buildTags();
         this.timestamp = new Timestamp(System.currentTimeMillis());
@@ -60,8 +62,10 @@ public class Post {
         return likes;
     }
 
-    public void addLike(Utente utente){
+    public void addLike(Utente utente) throws SocialPostException {
+        if(utente.getUsername().equals(author.getUsername()))
+            throw new SocialPostException("Non ci si può seguire da soli su questo Social!");
+
         likes.put(utente.getUsername(), utente.getFollowers());
-        author.getFollowers().add(utente.getUsername());
     }
 }
