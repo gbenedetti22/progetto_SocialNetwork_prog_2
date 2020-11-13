@@ -1,8 +1,7 @@
 package com.SocialNetwork;
 
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
     private final static SocialNetwork socialNetwork = new SocialNetwork();
@@ -15,41 +14,29 @@ public class Main {
         Utente gabry1 = socialNetwork.createUser("gabry");
         Utente gabry2 = new Utente("gabry");    //questa è la solita persona creata prima
 
-        Post cortexPost=socialNetwork.post(cortex, "Ti prenderò Crash! @crash");
-        Post cocoPost = socialNetwork.post(coco, "Crash si è rotto il computer");
-        Post gabryPost= socialNetwork.post(gabry2, "Questo è un test!");
+        Post cortexPost = socialNetwork.post(cortex, "Ti prenderò Crash!");
+        Post crashPost = socialNetwork.post(crash, "Ok!");
+        Post ps = null;
 
-        socialNetwork.addLike(cortexPost.getId(), crash);
-        socialNetwork.addLike(1, brio);
+        Post like1 = socialNetwork.post(crash, "like:" + cortexPost.getId());
+        Post like3 = socialNetwork.post(cortex, "like:" + crashPost.getId());
+        Post like4 = socialNetwork.post(brio, "like:" + crashPost.getId());
 
-        socialNetwork.addLike(cocoPost.getId(), crash);
-
-        socialNetwork.addLike(gabryPost.getId(), cortex);
-        socialNetwork.addLike(gabryPost.getId(), crash);
-        socialNetwork.addLike(gabryPost.getId(), brio);
-
-        System.out.println("influencers: "+socialNetwork.influencers());
 //========================================================================================================================
-        Utente dino = new Utente("dino");       //utente che non appartiene al social, esiste ma non si è registrato
-        Utente steve_jobs = new Utente("jobs");
-
-        Post post1 = new Post(1, steve_jobs, "Ciao mondo");
-        Post post2 = new Post(1, gabry2, "Apple merda @jobs");
-        Post post3 = new Post(1, gabry2, "Scherzo @jobs");
-
-        post1.addLike(gabry2);
-
-        post2.addLike(dino);
-        post2.addLike(steve_jobs);
-        post2.addLike(coco);
-
-        post3.addLike(crash);
-//        post3.addLike(gabry1);    // da errore
-
-        ArrayList<Post> list = new ArrayList<>();
-        list.add(post1);
-        list.add(post2);
-        list.add(post3);
-        System.out.println(socialNetwork.guessFollowers(list));
+//        List<Post> list = new ArrayList<>();
+////        list.add(ps);                                 //SocialPostException
+//        list.add(cortexPost);
+//        list.add(crashPost);
+//        list.add(like1);
+//        list.add(like3);
+//        list.add(like4);
+////        list.add(new Post(1,brio, "ciao belli"));     //da errore
+//
+//        socialNetwork.printSocial();
+//        System.out.println(socialNetwork.guessFollowers(list));
     }
+
+    private void guessFollowers(){}
+
+
 }

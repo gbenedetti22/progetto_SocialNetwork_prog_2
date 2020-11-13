@@ -2,13 +2,15 @@ package com.SocialNetwork;
 
 import com.SocialNetwork.CustomException.SocialPostException;
 import com.SocialNetwork.CustomException.SocialUserException;
+import com.SocialNetwork.Interfaces.ISocial;
 
 import java.util.*;
 
-public class SocialNetwork {
-    private final Map<String, Set<String>> social;  //utenti registrati + followers
+public class SocialNetwork implements ISocial {
+    private final Map<String, Set<String>> social;      //utenti registrati + followers
     private final HashMap<String, Integer> influencers; //utenti registrati + numero di followers
-    private final HashMap<Integer,Post> posts;      //post approvati
+    private final HashMap<Integer,Post> posts;          //post approvati
+    private final Set<String> metionedusers;            //utenti che hanno postato almeno una volta
 
     private int id_posts=1;
 
@@ -16,18 +18,33 @@ public class SocialNetwork {
         social= new HashMap<>();
         posts = new HashMap<>();
         influencers = new HashMap<>();
+        metionedusers = new HashSet<>();
     }
 
-    public Map<String, Set<String>> guessFollowers(List<Post> ps) {
+    public Map<String, Set<String>> guessFollowers(List<Post> ps) throws SocialPostException {
         Map<String, Set<String>> reteSociale = new HashMap<>();
+        HashMap<Integer,Post> posts = new HashMap<>();
 
         for (Post post : ps) {
+            if(post == null)
+                throw new SocialPostException("Errore nella lettura del Post");
+
             Utente utente = new Utente(post.getAuthor().getUsername());
 
-            if (reteSociale.containsKey(utente.getUsername())) {
-                reteSociale.get(utente.getUsername()).addAll(post.getLikes().keySet());
-            } else{
-                utente.getFollowers().addAll(post.getLikes().keySet());
+            if(posts.containsKey(post.getId()))
+                throw new SocialPostException("Questo Post è già presente nella rete locale");
+
+            posts.put(post.getId(), post);
+            if(post.getText().startsWith("like:")){
+                String[] splittedText=post.getText().split(":");
+                try {
+                    int idPost = Integer.parseInt(splittedText[1].trim());
+                    Utente newFollower=post.getAuthor();
+                    reteSociale.get(posts.get(idPost).getAuthor().getUsername()).add(newFollower.getUsername());
+                }catch(NumberFormatException ignored){}
+            }
+
+            if (!reteSociale.containsKey(utente.getUsername())) {
                 reteSociale.put(utente.getUsername(), utente.getFollowers());
             }
         }
@@ -46,21 +63,17 @@ public class SocialNetwork {
 
         return result;
     }
-    public Set<String> getMetionedusers(){
-        Set<String> metionedUsers = new HashSet<>();
-        for(Post ps : posts.values()){
-            metionedUsers.addAll(ps.getMetionedUsers());
-        }
-
-        return metionedUsers;
+    public Set<String> getMentionedUsers(){
+        return metionedusers;
     }
-    public Set<String> getMetionedusers(List<Post> ps){
-        Set<String> metionedUsers = new HashSet<>();
 
+    public Set<String> getMentionedUsers(List<Post> ps){
+        Set<String> list = new HashSet<>();
         for(Post post : ps){
-            metionedUsers.addAll(post.getMetionedUsers());
+            list.add(post.getAuthor().getUsername());
         }
-        return metionedUsers;
+
+        return list;
     }
     public List<Post> writtenBy(String username){
         List<Post> list = new ArrayList<>();
@@ -96,29 +109,40 @@ public class SocialNetwork {
     }
 
     public Post post(Utente author, String text) throws SocialUserException, SocialPostException {
+        if(author == null || text == null)
+            throw new SocialPostException("Errore nell inserimento dell autore o del testo");
+
         if(!social.containsKey(author.getUsername()))
             throw new SocialUserException("Utente non registrato");
 
+        if(text.startsWith("like:")){
+            String[] splittedText=text.split(":");
+            try {
+                int idPost = Integer.parseInt(splittedText[1].trim());
+                Post post=posts.get(idPost);        //ritorna null se get non trova nulla
+                if(post == null)
+                    throw new SocialPostException("PostID: " + idPost + " non trovato");
+
+                if(post.getAuthor().getUsername().equals(author.getUsername()))
+                    throw new SocialPostException("Non ci si può seguire da soli su questo Social!");
+
+                post.getAuthor().getFollowers().add(author.getUsername());
+                social.put(post.getAuthor().getUsername(), post.getAuthor().getFollowers());
+                influencers.put(post.getAuthor().getUsername(), post.getAuthor().getFollowers().size());
+            }catch (NumberFormatException ignored){}
+
+        }
+
         Post newPost = new Post(id_posts, author, text);
         posts.put(id_posts, newPost);
+        metionedusers.add(author.getUsername());
         id_posts++;
         return newPost;
     }
 
-    public void addLike(int id_post, Utente utente) throws SocialUserException, SocialPostException {
-        Post post= posts.get(id_post);
-
-        if(!social.containsKey(utente.getUsername()))
-            throw new SocialUserException("Utente non registrato nel Social");
-
-        post.addLike(utente);
-        post.getAuthor().getFollowers().add(utente.getUsername());
-
-        social.put(post.getAuthor().getUsername(), post.getAuthor().getFollowers());
-        influencers.put(post.getAuthor().getUsername(), post.getAuthor().getFollowers().size());
-    }
-
     public Utente createUser(String username) throws SocialUserException {
+        if(username == null)
+            throw new SocialUserException("L utente non può essere null");
         Utente utente = new Utente(username);
 
         if(social.containsKey(username)){
@@ -130,7 +154,7 @@ public class SocialNetwork {
         return utente;
     }
 
-    public void createUser(Utente utente) throws Exception {
+    public void createUser(Utente utente) throws SocialUserException {
         createUser(utente.getUsername());
     }
 
@@ -142,7 +166,6 @@ public class SocialNetwork {
             System.out.println('"'+post.getText()+'"');
             System.out.println(post.getTimestamp());
             System.out.println();
-            System.out.println("Like ricevuti: "+post.getLikes().size());
             System.out.println("===========================");
         }
     }
@@ -155,10 +178,9 @@ public class SocialNetwork {
         System.out.println(post.getTimestamp());
         System.out.println();
         System.out.println("Likes: ");
-        System.out.println(post.getLikes().keySet());
     }
 
-    public void printSocial(){
+    public void printSocial(){      //debug
         System.out.println(social);
     }
 }

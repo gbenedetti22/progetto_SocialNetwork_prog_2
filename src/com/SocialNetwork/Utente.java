@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Utente{
-    private String username;
+    private final String username;
     private final Set<String> followers;
 
     public Utente(String username) {
