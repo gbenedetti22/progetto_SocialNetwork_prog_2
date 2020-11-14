@@ -23,29 +23,30 @@ public class SocialNetwork implements ISocial {
 
     public Map<String, Set<String>> guessFollowers(List<Post> ps) throws SocialPostException {
         Map<String, Set<String>> reteSociale = new HashMap<>();
-        HashMap<Integer,Post> posts = new HashMap<>();
+        HashMap<Integer,Post> posts = new HashMap<>();//per tenere traccia dei Post precedenti
 
         for (Post post : ps) {
             if(post == null)
                 throw new SocialPostException("Errore nella lettura del Post");
 
-            Utente utente = new Utente(post.getAuthor().getUsername());
-
             if(posts.containsKey(post.getId()))
                 throw new SocialPostException("Questo Post è già presente nella rete locale");
+
+            String newFollower = post.getAuthor();
 
             posts.put(post.getId(), post);
             if(post.getText().startsWith("like:")){
                 String[] splittedText=post.getText().split(":");
                 try {
                     int idPost = Integer.parseInt(splittedText[1].trim());
-                    Utente newFollower=post.getAuthor();
-                    reteSociale.get(posts.get(idPost).getAuthor().getUsername()).add(newFollower.getUsername());
+                    Post likedPost=posts.get(idPost);
+                    if(likedPost != null)
+                        reteSociale.get(likedPost.getAuthor()).add(newFollower);
                 }catch(NumberFormatException ignored){}
             }
 
-            if (!reteSociale.containsKey(utente.getUsername())) {
-                reteSociale.put(utente.getUsername(), utente.getFollowers());
+            if (!reteSociale.containsKey(newFollower)) {
+                reteSociale.put(newFollower, new HashSet<>());
             }
         }
 
@@ -70,7 +71,7 @@ public class SocialNetwork implements ISocial {
     public Set<String> getMentionedUsers(List<Post> ps){
         Set<String> list = new HashSet<>();
         for(Post post : ps){
-            list.add(post.getAuthor().getUsername());
+            list.add(post.getAuthor());
         }
 
         return list;
@@ -78,7 +79,7 @@ public class SocialNetwork implements ISocial {
     public List<Post> writtenBy(String username){
         List<Post> list = new ArrayList<>();
         for(Post post : posts.values()){
-            if(post.getAuthor().getUsername().equals(username)){
+            if(post.getAuthor().equals(username)){
                 list.add(post);
             }
         }
@@ -87,7 +88,7 @@ public class SocialNetwork implements ISocial {
     public List<Post> writtenBy(List<Post> ps, String username){
         List<Post> list = new ArrayList<>();
         for(Post post : ps){
-            if(post.getAuthor().getUsername().equals(username)){
+            if(post.getAuthor().equals(username)){
                 list.add(post);
             }
         }
@@ -108,11 +109,11 @@ public class SocialNetwork implements ISocial {
         return result;
     }
 
-    public Post post(Utente author, String text) throws SocialUserException, SocialPostException {
+    public Post post(String author, String text) throws SocialUserException, SocialPostException {
         if(author == null || text == null)
             throw new SocialPostException("Errore nell inserimento dell autore o del testo");
 
-        if(!social.containsKey(author.getUsername()))
+        if(!social.containsKey(author))
             throw new SocialUserException("Utente non registrato");
 
         if(text.startsWith("like:")){
@@ -123,27 +124,27 @@ public class SocialNetwork implements ISocial {
                 if(post == null)
                     throw new SocialPostException("PostID: " + idPost + " non trovato");
 
-                if(post.getAuthor().getUsername().equals(author.getUsername()))
+                if(post.getAuthor().equals(author))
                     throw new SocialPostException("Non ci si può seguire da soli su questo Social!");
 
-                post.getAuthor().getFollowers().add(author.getUsername());
-                social.put(post.getAuthor().getUsername(), post.getAuthor().getFollowers());
-                influencers.put(post.getAuthor().getUsername(), post.getAuthor().getFollowers().size());
+                social.get(post.getAuthor()).add(author);
+                influencers.put(post.getAuthor(), social.get(post.getAuthor()).size());
             }catch (NumberFormatException ignored){}
 
         }
 
         Post newPost = new Post(id_posts, author, text);
         posts.put(id_posts, newPost);
-        metionedusers.add(author.getUsername());
+        metionedusers.add(author);
         id_posts++;
         return newPost;
     }
 
-    public Utente createUser(String username) throws SocialUserException {
+    public String createUser(String username) throws SocialUserException {
         if(username == null)
             throw new SocialUserException("L utente non può essere null");
-        Utente utente = new Utente(username);
+        if(username.isEmpty())
+            throw new SocialUserException("Il campo username, non può essere vuoto");
 
         if(social.containsKey(username)){
             throw new SocialUserException("Username già in uso");
@@ -151,18 +152,14 @@ public class SocialNetwork implements ISocial {
 
         social.put(username, new HashSet<>());
         influencers.put(username, 0);
-        return utente;
-    }
-
-    public void createUser(Utente utente) throws SocialUserException {
-        createUser(utente.getUsername());
+        return username;
     }
 
     public void printAllPosts(){
         System.out.println("===========================");
         for (Post post : posts.values()){
             System.out.println("ID: "+post.getId());
-            System.out.println(post.getAuthor().getUsername() + " ha scritto:");
+            System.out.println(post.getAuthor() + " ha scritto:");
             System.out.println('"'+post.getText()+'"');
             System.out.println(post.getTimestamp());
             System.out.println();
@@ -173,7 +170,7 @@ public class SocialNetwork implements ISocial {
         System.out.println("===========================");
         Post post = posts.get(id);
         System.out.println("ID: "+post.getId());
-        System.out.println(post.getAuthor().getUsername() + " ha scritto:");
+        System.out.println(post.getAuthor() + " ha scritto:");
         System.out.println('"'+post.getText()+'"');
         System.out.println(post.getTimestamp());
         System.out.println();

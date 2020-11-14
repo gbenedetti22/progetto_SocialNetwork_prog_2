@@ -7,11 +7,12 @@ import java.sql.Timestamp;
 
 public final class Post implements IPost {
     private final int id;
-    private final Utente author;
+//    private final Utente author;
+    private final String author;
     private final String text;
     private final Timestamp timestamp;
 
-    public Post(int id, Utente author, String text) throws SocialPostException {
+    public Post(int id, String author, String text) throws SocialPostException {
         this.id = id;
         this.author = author;
         this.text = text;
@@ -24,7 +25,7 @@ public final class Post implements IPost {
         return id;
     }
 
-    public Utente getAuthor() {
+    public String getAuthor() {
         return author;
     }
 

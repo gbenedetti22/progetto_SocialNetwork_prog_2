@@ -1,10 +1,8 @@
 package com.SocialNetwork.Interfaces;
 
-import com.SocialNetwork.Utente;
-
 public interface IPost {
     int getId();
-    Utente getAuthor();
+    String getAuthor();
     String getText();
     String getTimestamp();
 }
