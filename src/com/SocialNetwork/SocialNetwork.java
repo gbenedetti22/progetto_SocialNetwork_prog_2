@@ -1,9 +1,7 @@
 package com.SocialNetwork;
 
-import com.SocialNetwork.CustomException.SocialPostException;
-import com.SocialNetwork.CustomException.SocialUserException;
+import com.SocialNetwork.CustomException.*;
 import com.SocialNetwork.Interfaces.ISocial;
-
 import java.util.*;
 
 public class SocialNetwork implements ISocial {
@@ -14,6 +12,16 @@ public class SocialNetwork implements ISocial {
 
     private int id_posts=1;
 
+    /**
+     * AF: a(social,influencers,posts,metionedusers) = (f:(String) -> (followers),<br>
+     *                                                  f:(String)->(followers.size),<br>
+     *                                                  f:(Integer)->(Post),<br>
+     *                                                  f:[0, metionedusers.size]->(String) tale che ∃x (x ∈ metionedusers ∧ ∀y (y ∈ metionedusers -> y!=x) ∧ (∃post ∈ posts.values . post.author=x)<br>
+     * followers -> (String) tale che ∃p1,p2 ∈ ps . p1.author=a ∧ p2.author=b ∧ a≠b ∧ p1.id=x ∈ N ∧ p2.contains("like:" + x)
+     */
+    /**
+     * MODIFIES: this
+     */
     public SocialNetwork() {
         social= new HashMap<>();
         posts = new HashMap<>();
@@ -21,16 +29,13 @@ public class SocialNetwork implements ISocial {
         metionedusers = new HashSet<>();
     }
 
-    public Map<String, Set<String>> guessFollowers(List<Post> ps) throws SocialPostException {
+    public Map<String, Set<String>> guessFollowers(List<Post> ps) throws SocialFollowBackException, SocialDuplicatePostException {
         Map<String, Set<String>> reteSociale = new HashMap<>();
-        HashMap<Integer,Post> posts = new HashMap<>();//per tenere traccia dei Post precedenti
+        HashMap<Integer,Post> posts = new HashMap<>();  //per tenere traccia dei Post precedenti
 
         for (Post post : ps) {
-            if(post == null)
-                throw new SocialPostException("Errore nella lettura del Post");
-
             if(posts.containsKey(post.getId()))
-                throw new SocialPostException("Questo Post è già presente nella rete locale");
+                throw new SocialDuplicatePostException();
 
             String newFollower = post.getAuthor();
 
@@ -40,8 +45,11 @@ public class SocialNetwork implements ISocial {
                 try {
                     int idPost = Integer.parseInt(splittedText[1].trim());
                     Post likedPost=posts.get(idPost);
-                    if(likedPost != null)
+                    if(likedPost != null) {
+                        if(likedPost.getAuthor().equals(newFollower))
+                            throw new SocialFollowBackException("Non ci si può seguire da soli su questo Social!");
                         reteSociale.get(likedPost.getAuthor()).add(newFollower);
+                    }
                 }catch(NumberFormatException ignored){}
             }
 
@@ -68,15 +76,20 @@ public class SocialNetwork implements ISocial {
         return metionedusers;
     }
 
-    public Set<String> getMentionedUsers(List<Post> ps){
+    public Set<String> getMentionedUsers(List<Post> ps) throws SocialPostArgumentException {
         Set<String> list = new HashSet<>();
         for(Post post : ps){
+            if(post == null)
+                throw new SocialPostArgumentException("Un Post non può essere null");
             list.add(post.getAuthor());
         }
 
         return list;
     }
-    public List<Post> writtenBy(String username){
+    public List<Post> writtenBy(String username) throws SocialUserArgumentException {
+        if(username.isEmpty() || username.trim().length() == 0)
+            throw  new SocialUserArgumentException("username non può essere vuota o contenere solo spazi vuoti");
+
         List<Post> list = new ArrayList<>();
         for(Post post : posts.values()){
             if(post.getAuthor().equals(username)){
@@ -85,7 +98,10 @@ public class SocialNetwork implements ISocial {
         }
         return list;
     }
-    public List<Post> writtenBy(List<Post> ps, String username){
+    public List<Post> writtenBy(List<Post> ps, String username) throws SocialUserArgumentException {
+        if(username.isEmpty() || username.trim().length() == 0)
+            throw  new SocialUserArgumentException("username non può essere vuota o contenere solo spazi vuoti");
+
         List<Post> list = new ArrayList<>();
         for(Post post : ps){
             if(post.getAuthor().equals(username)){
@@ -94,11 +110,14 @@ public class SocialNetwork implements ISocial {
         }
         return list;
     }
-    public List<Post> containing (List<String> words){
+    public List<Post> containing (List<String> words) throws IllegalArgumentException{
         List<Post> result= new ArrayList<>();
 
         for(Post post: posts.values()){
             for (String word : words) {
+                if(word == null)
+                    throw new IllegalArgumentException("string null non ammesse");
+
                 if (post.getText().contains(word)) {
                     result.add(post);
                     break;
@@ -109,26 +128,30 @@ public class SocialNetwork implements ISocial {
         return result;
     }
 
-    public Post post(String author, String text) throws SocialUserException, SocialPostException {
-        if(author == null || text == null)
-            throw new SocialPostException("Errore nell inserimento dell autore o del testo");
+    protected HashMap<Integer, Post> getPosts() {
+        return posts;
+    }
 
+    public Post post(String author, String text) throws SocialUserException, SocialPostArgumentException, SocialFollowBackException {
         if(!social.containsKey(author))
             throw new SocialUserException("Utente non registrato");
+
+        if(author.length()==0 || text.length()==0)
+            throw new SocialPostArgumentException("author e text non possono essere vuoti");
 
         if(text.startsWith("like:")){
             String[] splittedText=text.split(":");
             try {
                 int idPost = Integer.parseInt(splittedText[1].trim());
                 Post post=posts.get(idPost);        //ritorna null se get non trova nulla
-                if(post == null)
-                    throw new SocialPostException("PostID: " + idPost + " non trovato");
+                if(post != null) {                  //se io pubblico like:1234 ma 1234 non corrisponde a nessun post
+                                                    //viene comunque pubblicato, ma viene scartato dall analisi dei like
+                    if (post.getAuthor().equals(author))
+                        throw new SocialFollowBackException("Non ci si può seguire da soli su questo Social!");
 
-                if(post.getAuthor().equals(author))
-                    throw new SocialPostException("Non ci si può seguire da soli su questo Social!");
-
-                social.get(post.getAuthor()).add(author);
-                influencers.put(post.getAuthor(), social.get(post.getAuthor()).size());
+                    social.get(post.getAuthor()).add(author);
+                    influencers.put(post.getAuthor(), social.get(post.getAuthor()).size());
+                }
             }catch (NumberFormatException ignored){}
 
         }
@@ -140,18 +163,15 @@ public class SocialNetwork implements ISocial {
         return newPost;
     }
 
-    public String createUser(String username) throws SocialUserException {
-        if(username == null)
-            throw new SocialUserException("L utente non può essere null");
+    public String createUser(String username) throws SocialDuplicateUserException, SocialUserArgumentException {
         if(username.isEmpty())
-            throw new SocialUserException("Il campo username, non può essere vuoto");
+            throw new SocialUserArgumentException("Il campo username, non può essere vuoto");
 
         if(social.containsKey(username)){
-            throw new SocialUserException("Username già in uso");
+            throw new SocialDuplicateUserException();
         }
 
         social.put(username, new HashSet<>());
-        influencers.put(username, 0);
         return username;
     }
 
