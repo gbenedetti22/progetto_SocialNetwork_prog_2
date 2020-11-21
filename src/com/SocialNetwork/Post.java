@@ -11,11 +11,13 @@ public final class Post implements IPost {
     private final String text;
     private final Timestamp timestamp;
 
-    /**
-     *REQUIRES: id ≠ null ∧ author ≠ null ∧ text ≠ null ∧ text.length < 140<br>
-     *MODIFIES:this<br>
-     * @throws SocialPostArgumentException se text.length() > 140
-     * @throws NullPointerException (unchecked exception) se id = null V author = null V text = null
+    /*
+     * REQUIRES: id ≠ null ∧ author ≠ null ∧ text ≠ null ∧ text.length < 140
+     * MODIFIES:this
+     *
+     * THROWS:
+     * SocialPostArgumentException: se text.length() > 140
+     * NullPointerException: (unchecked exception) se id = null V author = null V text = null
      */
     public Post(int id, String author, String text) throws SocialPostArgumentException {
         this.id = id;

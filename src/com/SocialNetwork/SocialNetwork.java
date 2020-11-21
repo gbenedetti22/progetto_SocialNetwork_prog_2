@@ -8,44 +8,51 @@ public class SocialNetwork implements ISocial {
     private final Map<String, Set<String>> social;      //utenti registrati + followers
     private final HashMap<String, Integer> influencers; //utenti registrati + numero di followers
     private final HashMap<Integer,Post> posts;          //post approvati
-    private final Set<String> metionedusers;            //utenti che hanno postato almeno una volta
+    private final Set<String> metionedUsers;            //utenti che hanno postato almeno una volta
 
     private int id_posts=1;
-
-    /**
-     * AF: a(social,influencers,posts,metionedusers) = (f:(String) -> (followers),<br>
-     *                                                  f:(String)->(followers.size),<br>
-     *                                                  f:(Integer)->(Post),<br>
-     *                                                  f:[0, metionedusers.size]->(String) tale che ∃x (x ∈ metionedusers ∧ ∀y (y ∈ metionedusers -> y!=x) ∧ (∃post ∈ posts.values . post.author=x)<br>
-     * followers -> (String) tale che ∃p1,p2 ∈ ps . p1.author=a ∧ p2.author=b ∧ a≠b ∧ p1.id=x ∈ N ∧ p2.contains("like:" + x)
-     */
-    /**
+    /*
+     * AF: a(social,influencers,posts,metionedusers) = (social:(String) -> (followers)
+     *                                                      f(u) = { followers di u } se u ∈ social.keySet(),
+     *                                                  influencers:(String) -> (Integer)
+     *                                                      f(x)= (social(x).size) se x ∈ social.keySet(),
+     *                                                  posts:(Integer)->(Post),
+     *                                                      f(y)= {x ∈ Post | ∃x.author ∈ social.keySet}
+     *                                                  metionedusers:[0, metionedusers.size]->(String)=
+     *                                                      { u | u ∈ String ∧ (∃p | p ∈ posts.values ∧ u = p.author) }
+     * followers(a,b) se ∃p1,p2 ∈ posts.values | p1.author=a ∧ p2.author=b ∧ a≠b ∧ p1.id=x ∈ N ∧ p2.text.contains("like:" + x)
+     *
      * MODIFIES: this
      */
     public SocialNetwork() {
         social= new HashMap<>();
         posts = new HashMap<>();
         influencers = new HashMap<>();
-        metionedusers = new HashSet<>();
+        metionedUsers = new HashSet<>();
     }
 
     public Map<String, Set<String>> guessFollowers(List<Post> ps) throws SocialFollowBackException, SocialDuplicatePostException {
         Map<String, Set<String>> reteSociale = new HashMap<>();
-        HashMap<Integer,Post> posts = new HashMap<>();  //per tenere traccia dei Post precedenti
+        HashMap<Integer,Post> posts = new HashMap<>();  //man mano che scorro la lista ps, tengo traccia dei Post
+                                                        //così quando trovo un post che comincia con "like:+id", lo prendo
+                                                        //direttamente da qua
 
         for (Post post : ps) {
-            if(posts.containsKey(post.getId()))
+            if(posts.containsKey(post.getId()))         //se trovo 2 post con la stessa key, lancio un Exception
                 throw new SocialDuplicatePostException();
 
             String newFollower = post.getAuthor();
 
             posts.put(post.getId(), post);
-            if(post.getText().startsWith("like:")){
+            if(post.getText().startsWith("like:")){     //prendo il Post "likedPost" a cui voglio mettere like
+                                                        //se l autore non è lo stesso di chi ha scritto il Post "post" ("newFollower")
+                                                        //allora prendo i followers dell autore di "likedPost" e ci aggiungo
+                                                        //l autore di "post"("newFollower")
                 String[] splittedText=post.getText().split(":");
                 try {
                     int idPost = Integer.parseInt(splittedText[1].trim());
                     Post likedPost=posts.get(idPost);
-                    if(likedPost != null) {
+                    if(likedPost != null) {             //se non trovo il Post a cui mettere like, "post" viene pubblicato comunque
                         if(likedPost.getAuthor().equals(newFollower))
                             throw new SocialFollowBackException("Non ci si può seguire da soli su questo Social!");
                         reteSociale.get(likedPost.getAuthor()).add(newFollower);
@@ -62,25 +69,23 @@ public class SocialNetwork implements ISocial {
     }
     public List<String> influencers(){
         List<Map.Entry<String, Integer>> sorted_influencers = new ArrayList<>(influencers.entrySet());
-        sorted_influencers.sort(Map.Entry.comparingByValue());  //ordine crescente
-
+        sorted_influencers.sort(Map.Entry.comparingByValue());  //ordino gli utenti per ordine crescente
+                                                                // in base al numero di follower che hanno
         List<String> result= new ArrayList<>();
 
-        for(int i=sorted_influencers.size()-1; i>=0; i--){      //parto dalla fine e scorro al contrario
+        for(int i=sorted_influencers.size()-1; i>=0; i--){
             result.add(sorted_influencers.get(i).getKey());
         }
 
         return result;
     }
     public Set<String> getMentionedUsers(){
-        return metionedusers;
+        return metionedUsers;
     }
 
-    public Set<String> getMentionedUsers(List<Post> ps) throws SocialPostArgumentException {
+    public Set<String> getMentionedUsers(List<Post> ps) {
         Set<String> list = new HashSet<>();
-        for(Post post : ps){
-            if(post == null)
-                throw new SocialPostArgumentException("Un Post non può essere null");
+        for(Post post : ps){                                    //per ogni post in ps
             list.add(post.getAuthor());
         }
 
@@ -91,9 +96,9 @@ public class SocialNetwork implements ISocial {
             throw  new SocialUserArgumentException("username non può essere vuota o contenere solo spazi vuoti");
 
         List<Post> list = new ArrayList<>();
-        for(Post post : posts.values()){
+        for(Post post : posts.values()){                        //per ogni post in posts<Integer,Post>
             if(post.getAuthor().equals(username)){
-                list.add(post);
+                list.add(post);                                 //lista dei post scritti da username
             }
         }
         return list;
@@ -110,14 +115,11 @@ public class SocialNetwork implements ISocial {
         }
         return list;
     }
-    public List<Post> containing (List<String> words) throws IllegalArgumentException{
+    public List<Post> containing (List<String> words) {
         List<Post> result= new ArrayList<>();
 
         for(Post post: posts.values()){
             for (String word : words) {
-                if(word == null)
-                    throw new IllegalArgumentException("string null non ammesse");
-
                 if (post.getText().contains(word)) {
                     result.add(post);
                     break;
@@ -139,7 +141,8 @@ public class SocialNetwork implements ISocial {
         if(author.length()==0 || text.length()==0)
             throw new SocialPostArgumentException("author e text non possono essere vuoti");
 
-        if(text.startsWith("like:")){
+        if(text.startsWith("like:")){               //stesso meccanismo della guessFollower, ma fatto su tutta la rete
+                                                    //(quindi usando la HashMap social)
             String[] splittedText=text.split(":");
             try {
                 int idPost = Integer.parseInt(splittedText[1].trim());
@@ -149,16 +152,21 @@ public class SocialNetwork implements ISocial {
                     if (post.getAuthor().equals(author))
                         throw new SocialFollowBackException("Non ci si può seguire da soli su questo Social!");
 
-                    social.get(post.getAuthor()).add(author);
-                    influencers.put(post.getAuthor(), social.get(post.getAuthor()).size());
+                    social.get(post.getAuthor()).add(author);   //aggiungo "author" ai follower dell autore del Post (post.getAuthor())
+                                                                //a cui "author" ha messo like
+                                                                //(postando un Post del tipo "like:+id_post")
+                    influencers.put(post.getAuthor(), social.get(post.getAuthor()).size()); //aggiorno il numero di followers
+                                                                                            //di post.getAuthor()
+                    influencers.put(author,0);                  //il like è un post, quindi all inzio l autore di questo
+                                                                //post avrà 0 likes
                 }
             }catch (NumberFormatException ignored){}
 
         }
 
         Post newPost = new Post(id_posts, author, text);
-        posts.put(id_posts, newPost);
-        metionedusers.add(author);
+        posts.put(id_posts, newPost);                           //pubblico il post
+        metionedUsers.add(author);
         id_posts++;
         return newPost;
     }
@@ -175,29 +183,7 @@ public class SocialNetwork implements ISocial {
         return username;
     }
 
-    public void printAllPosts(){
-        System.out.println("===========================");
-        for (Post post : posts.values()){
-            System.out.println("ID: "+post.getId());
-            System.out.println(post.getAuthor() + " ha scritto:");
-            System.out.println('"'+post.getText()+'"');
-            System.out.println(post.getTimestamp());
-            System.out.println();
-            System.out.println("===========================");
-        }
-    }
-    public void printPost(int id){
-        System.out.println("===========================");
-        Post post = posts.get(id);
-        System.out.println("ID: "+post.getId());
-        System.out.println(post.getAuthor() + " ha scritto:");
-        System.out.println('"'+post.getText()+'"');
-        System.out.println(post.getTimestamp());
-        System.out.println();
-        System.out.println("Likes: ");
-    }
-
-    public void printSocial(){      //debug
+    public void printSocial(){                                  //debug
         System.out.println(social);
     }
 }

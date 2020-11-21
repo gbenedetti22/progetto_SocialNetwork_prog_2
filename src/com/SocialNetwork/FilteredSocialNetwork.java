@@ -6,7 +6,12 @@ import com.SocialNetwork.CustomException.SocialUserException;
 import com.SocialNetwork.Interfaces.IFilteredSocial;
 
 import java.util.ArrayList;
-
+/*
+    OVERVIEW: Collezione mutabile di Post, segnalati inserendo la String "rep: "+ id ∈ N nel campo text del metodo post,
+    ereditato della superclasse SocialNetwork.
+    AF: a(blacklist)=(blacklist[0,blacklist.size]->(Post)=
+        { p1 | p1 ∈ posts.values ∧ (∃p2 ∈ posts.values | p2.getText.contains("rep: "+ p1.getId)) }
+ */
 public class FilteredSocialNetwork extends SocialNetwork implements IFilteredSocial {
     private final ArrayList<Post> blacklist = new ArrayList<>();
 
