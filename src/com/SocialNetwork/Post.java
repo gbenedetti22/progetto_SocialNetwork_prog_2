@@ -40,7 +40,7 @@ public final class Post implements IPost {
         return text;
     }
 
-    public String getTimestamp() {
-        return timestamp.toString();
+    public Timestamp getTimestamp() {
+        return timestamp;
     }
 }

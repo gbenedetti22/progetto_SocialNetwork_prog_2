@@ -2,6 +2,8 @@ package com.SocialNetwork;
 
 import com.SocialNetwork.CustomException.*;
 import com.SocialNetwork.Interfaces.ISocial;
+
+import java.lang.reflect.Array;
 import java.util.*;
 
 public class SocialNetwork implements ISocial {
@@ -33,36 +35,42 @@ public class SocialNetwork implements ISocial {
 
     public Map<String, Set<String>> guessFollowers(List<Post> ps) throws SocialFollowBackException, SocialDuplicatePostException {
         Map<String, Set<String>> reteSociale = new HashMap<>();
-        HashMap<Integer,Post> posts = new HashMap<>();  //man mano che scorro la lista ps, tengo traccia dei Post
-                                                        //così quando trovo un post che comincia con "like:+id", lo prendo
-                                                        //direttamente da qua
+        HashMap<Integer,Post> posts = new HashMap<>();
+        HashMap<Integer,Post> likes = new HashMap<>();
 
-        for (Post post : ps) {
-            if(posts.containsKey(post.getId()))         //se trovo 2 post con la stessa key, lancio un Exception
+        for (Post post : ps){   //separo i likes dai Post
+            if(posts.containsKey(post.getId()) || likes.containsKey(post.getId()))
                 throw new SocialDuplicatePostException();
 
-            String newFollower = post.getAuthor();
+            if(post.getText().contains("like:")){
+                likes.put(post.getId(),post);
+            }else {
+                posts.put(post.getId(),post);
+            }
+        }
 
-            posts.put(post.getId(), post);
-            if(post.getText().startsWith("like:")){     //prendo il Post "likedPost" a cui voglio mettere like
-                                                        //se l autore non è lo stesso di chi ha scritto il Post "post" ("newFollower")
-                                                        //allora prendo i followers dell autore di "likedPost" e ci aggiungo
-                                                        //l autore di "post"("newFollower")
-                String[] splittedText=post.getText().split(":");
-                try {
-                    int idPost = Integer.parseInt(splittedText[1].trim());
-                    Post likedPost=posts.get(idPost);
-                    if(likedPost != null) {             //se non trovo il Post a cui mettere like, "post" viene pubblicato comunque
-                        if(likedPost.getAuthor().equals(newFollower))
-                            throw new SocialFollowBackException("Non ci si può seguire da soli su questo Social!");
-                        reteSociale.get(likedPost.getAuthor()).add(newFollower);
+        for (Post like : likes.values()){    //per ogni like messo ad un Post, controllo se quel Post esiste e se gli autori
+                                    //corrispondono (cioè se si è messo like da solo).
+                                    //Se tutto questo è rispettato allora
+                                    //l autore che ha postato il like, finisce tra i follower dell autore del Post a cui
+                                    //ha messo like
+            String[] splittedText=like.getText().split(":");
+            try {
+                int idPost = Integer.parseInt(splittedText[1].trim());
+                Post likedPost = posts.get(idPost);   //prendo il Post a cui like.author ha messo like
+
+                if (likedPost != null && like.getTimestamp().after(likedPost.getTimestamp())) {//se il like è stato messo dopo il Post
+                    if (likedPost.getAuthor().equals(like.getAuthor()))
+                        throw new SocialFollowBackException("Non ci si può seguire da soli su questo Social!");
+
+                    //metto like.author tra i followers dell autore del Post a cui lui ha messo like
+                    if (!reteSociale.containsKey(likedPost.getAuthor())) {
+                        reteSociale.put(likedPost.getAuthor(), new HashSet<>(Collections.singleton(like.getAuthor())));
+                    } else {
+                        reteSociale.get(likedPost.getAuthor()).add(like.getAuthor());
                     }
-                }catch(NumberFormatException ignored){}
-            }
-
-            if (!reteSociale.containsKey(newFollower)) {
-                reteSociale.put(newFollower, new HashSet<>());
-            }
+                }
+            } catch (NumberFormatException ignored) {}
         }
 
         return reteSociale;

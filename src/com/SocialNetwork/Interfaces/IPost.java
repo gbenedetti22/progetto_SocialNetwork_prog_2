@@ -1,5 +1,7 @@
 package com.SocialNetwork.Interfaces;
 
+import java.sql.Timestamp;
+
 public interface IPost {
     /*
      * OVERVIEW: un Post è un oggetto immutable contenente un id univoco ∈ N, un autore, un testo di massimo 140 caratteri
@@ -26,5 +28,5 @@ public interface IPost {
     /*
      *EFFECTS: restituisce il timestamp del post
      */
-    String getTimestamp();
+    Timestamp getTimestamp();
 }

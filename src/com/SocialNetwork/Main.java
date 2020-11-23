@@ -1,12 +1,16 @@
 package com.SocialNetwork;
 
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Main {
     private final static SocialNetwork socialNetwork = new SocialNetwork();
 
     public static void main(String[] args) throws Exception {
+        Post p = new Post(10, "utente1", "like:1");
         String crash = socialNetwork.createUser("crash");
         String coco = socialNetwork.createUser("coco");
         String cortex = socialNetwork.createUser("cortex");
@@ -46,7 +50,10 @@ public class Main {
         list.add(like1);        //crash mette like a cortex
         list.add(like3);        //cortex scrive like:abcd
         list.add(like4);        //brio mette like a crash
+        list.add(p);          //viene scartato, in quanto il like è stato messo prima del Post
         list.add(like_guess);   //gabry mette like a cortex
+        Collections.shuffle(list);  //mescolo tutto
+
 //        list.add(followBackException);
 
         System.out.println("(guessFollowers) rete sociale derivata: "+socialNetwork.guessFollowers(list));
