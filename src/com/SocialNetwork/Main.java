@@ -56,5 +56,15 @@ public class Main {
 
         System.out.println("(guessFollowers) rete sociale derivata: "+socialNetwork.guessFollowers(list));
         System.out.println("[metionedUsers(ps)] utenti mezionati in list: "+ socialNetwork.getMentionedUsers(list));
+//========================================================================================================================
+        FilteredSocialNetwork filteredSocialNetwork = new FilteredSocialNetwork();
+        String rillaRoo=filteredSocialNetwork.createUser("rilla_roo");
+        String tiny=filteredSocialNetwork.createUser("tiny");
+
+        Post tinyOffensivePost=filteredSocialNetwork.post(tiny, "aaarrghh!");
+        filteredSocialNetwork.post(rillaRoo, "rep:"+tinyOffensivePost.getId());
+
+        System.out.println("(filteredSocialNetwork) Post offensivi: "+filteredSocialNetwork.getBlacklist());
+        filteredSocialNetwork.removePostfromBlacklist(tinyOffensivePost);
     }
 }

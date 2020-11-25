@@ -15,10 +15,13 @@ import java.util.ArrayList;
 public class FilteredSocialNetwork extends SocialNetwork implements IFilteredSocial {
     private final ArrayList<Post> blacklist = new ArrayList<>();
 
+    public FilteredSocialNetwork() {}
+
     @Override
     public Post post(String author, String text) throws SocialPostArgumentException, SocialUserException, SocialFollowBackException {
         Post post=super.post(author, text);
-        if(text.startsWith("rep:")){
+        if(text.startsWith("rep:")){    //controllo se il Post da segnalare esiste,
+                                        // e solo in quel caso lo metto nella blacklist
             String[] splitted_text=text.split(":");
             try {
                 int reportedPostID = Integer.parseInt(splitted_text[1].trim());
@@ -28,6 +31,10 @@ public class FilteredSocialNetwork extends SocialNetwork implements IFilteredSoc
             }catch(NumberFormatException ignored){}
         }
         return post;
+    }
+
+    public void removePostfromBlacklist(Post p){
+        blacklist.remove(p);
     }
 
     public ArrayList<Post> getBlacklist() {

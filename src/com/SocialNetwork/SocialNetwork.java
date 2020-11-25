@@ -36,27 +36,28 @@ public class SocialNetwork implements ISocial {
 
     public Map<String, Set<String>> guessFollowers(List<Post> ps) throws SocialFollowBackException, SocialDuplicatePostException {
         Map<String, Set<String>> reteSociale = new HashMap<>();
-        HashMap<Integer, Post> posts = new HashMap<>();
-        HashMap<Integer, Post> likes = new HashMap<>();
+        HashMap<Integer,Post> posts = new HashMap<>();
+        HashMap<Integer,Post> likes = new HashMap<>();
 
-        for (Post post : ps) {   //separo i likes dai Post
-            if (posts.containsKey(post.getId()) || likes.containsKey(post.getId()))
+        for (Post post : ps){   //separo i likes dai Post
+            if(posts.containsKey(post.getId()) || likes.containsKey(post.getId()))
                 throw new SocialDuplicatePostException();
+            reteSociale.put(post.getAuthor(), new HashSet<>()); //registro l utente nella rete sociale fittizia
 
-            if (post.getText().contains("like:")) {
-                likes.put(post.getId(), post);
-            } else {
-                posts.put(post.getId(), post);
+            if(post.getText().contains("like:")){
+                likes.put(post.getId(),post);
+            }else {
+                posts.put(post.getId(),post);
             }
         }
 
-        for (Post like : likes.values()) {  //per ogni like messo ad un Post, controllo se quel Post esiste e se gli autori
-                                            //corrispondono (cioè se si è messo like da solo).
-                                            //Se tutto questo è rispettato allora
-                                            //l autore che ha postato il like, finisce tra i follower dell autore del Post a cui
-                                            //ha messo like
+        for (Post like : likes.values()){    //per ogni like messo ad un Post, controllo se quel Post esiste e se gli autori
+            //corrispondono (cioè se si è messo like da solo).
+            //Se tutto questo è rispettato allora
+            //l autore che ha postato il like, finisce tra i follower dell autore del Post a cui
+            //ha messo like
+            String[] splittedText=like.getText().split(":");
             try {
-                String[] splittedText = like.getText().split(":");
                 int idPost = Integer.parseInt(splittedText[1].trim());
                 Post likedPost = posts.get(idPost);   //prendo il Post a cui like.author ha messo like
 
@@ -65,15 +66,9 @@ public class SocialNetwork implements ISocial {
                         throw new SocialFollowBackException("Non ci si può seguire da soli su questo Social!");
 
                     //metto like.author tra i followers dell autore del Post a cui lui ha messo like
-                    if (!reteSociale.containsKey(like.getAuthor())) {
-                        reteSociale.put(like.getAuthor(), new HashSet<>(Collections.singleton(likedPost.getAuthor())));
-                    } else {
-                        reteSociale.get(like.getAuthor()).add(likedPost.getAuthor()); //metto tra i seguiti di chi ha messo
-                                                                                     //like, l autore del Post likato
-                    }
+                    reteSociale.get(likedPost.getAuthor()).add(like.getAuthor());
                 }
-            } catch (NumberFormatException ignored) {
-            }
+            } catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {}
         }
 
         return reteSociale;
@@ -171,7 +166,7 @@ public class SocialNetwork implements ISocial {
                     influencers.put(post.getAuthor(), influencers.get(post.getAuthor())+1); //aggiorno il numero di followers
                                                                                             //di post.getAuthor()
                 }
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {}
         }
 
         Post newPost = new Post(id_posts, author, text);
@@ -193,11 +188,11 @@ public class SocialNetwork implements ISocial {
         }
 
         social.put(username, new HashSet<>());
-        influencers.put(username, 0);
+        influencers.put(username, 0);   //all inizio, l utente appena registrato non segue nessuno
         return username;
     }
 
-    public void printSocial() {                                  //debug
+    public void printSocial() { //debug
         System.out.println(social);
     }
 }

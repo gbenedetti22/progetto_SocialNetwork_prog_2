@@ -29,4 +29,10 @@ public interface IFilteredSocial extends ISocial {
      * EFFECTS: ritorna la lista contenente i Post segnalati da un utente
      */
     ArrayList<Post> getBlacklist();
+
+    /*
+    EFFECTS: rimuove il post dato come parametro dalla blacklist
+    MODIFIES: this
+     */
+    void removePostfromBlacklist(Post p);
 }

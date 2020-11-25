@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/*	OVERVIEW: Collezione mutabile di <Post,followers> dove followers sono tutti gli utenti che hanno
- pubblicato almeno una volta un Post contenente la String "like:"+id ∈ N
+/*	OVERVIEW: Collezione mutabile di <Post,utenti> dove gli utenti possono seguire altri utenti che hanno
+ pubblicato almeno una volta. Seguire un altro utente (o mettere like) significa
+ pubblicare un Post contenente la String "like:"+id ∈ N del post a cui vogliamo mettere like
 
  Typical Element: <Post,followers> dove l insieme posts contiene i Post e social contiene gli utenti con
  i relativi followers
