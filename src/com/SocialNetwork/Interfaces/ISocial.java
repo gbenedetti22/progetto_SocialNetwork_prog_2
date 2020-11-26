@@ -11,8 +11,8 @@ import java.util.Set;
  pubblicato almeno una volta. Seguire un altro utente (o mettere like) significa
  pubblicare un Post contenente la String "like:"+id ∈ N del post a cui vogliamo mettere like
 
- Typical Element: <Post,followers> dove l insieme posts contiene i Post e social contiene gli utenti con
- i relativi followers
+ Typical Element: <Post,seguiti> dove l insieme posts contiene i Post e social contiene gli utenti con
+ i relativi seguiti
 
  Rep Invariant:
  *  social != null ∧ social.size >= 0 ∧
@@ -35,13 +35,13 @@ import java.util.Set;
 public interface ISocial {
     /*
      * REQUIRES: ps ≠ null ∧ ∀p ∈ ps . p ≠ null ∧ p instanceof Post)
-     * EFFECTS: restituisce una Map<Key,Value> contenente come Key: gli autori del Post e come Value:i suoi followers.
+     * EFFECTS: restituisce una Map<Key,Value> contenente come Key: gli autori del Post e come Value:i suoi seguiti.
      * Un utente a segue un utente b, se esiste un post di a tale per cui 
      * il suo post contiene la dicitura "like:"+ un intero x
      * e un post di b, il cui id è quello stesso numero x.
      * Formalmente:
      * ∃p1,p2 ∈ ps . p1.author=a ∧ p2.author=b ∧ a≠b ∧ p1.id=x ∈ N ∧ p2.contains("like:" + x) -> f(a,b)
-     *     f:(u x u)->(u x followers)
+     *     f:(u x u)->(u x seguiti)
      *     dato a ⊆ u ∧ b ⊆ u
      *     f(a,b)=ab
      *
@@ -116,18 +116,21 @@ public interface ISocial {
      * assegna un intero come id, il quale verrà dopo incrementato.
      * Inoltre aggiunge p1 in un insieme posts e p1.author in un insieme metionedUsers.
      * Se text contiene la dicitura "like:+int id", allora il Post p2 con quell id specificato viene preso 
-     * dall insieme posts e viene aggiunta la value String p1.author nell insieme social, che ha come key
-     * p2.author. Infine viene aggiornato l insieme influencers, il quale è definito come la funzione che associa ad
-     * ogni utente il relativo numero di followers. Ritorna un riferimento al Post appena creato.
-     * Più formalmente: definito posts come l insieme dei post, metionedUsers come
-     * l insieme degli autori di questi post, social come la funzione che associa ad ogni utente i relativi followers,
-     * influencers come la funzione che associa ad ogni utente, il numero di followers, p1 ∈ Post come il post appena
-     * creato e p2 ∈ Post come il Post a cui viene messo il like:
+     * dall insieme posts e viene aggiunta la value String p2.author nell insieme social, che ha come key
+     * p1.author. Infine viene aggiornato l insieme influencers, il quale è definito come la funzione che associa ad
+     * ogni utente il relativo numero di followers.
+     * Ritorna un riferimento al Post appena creato.
+     * Più formalmente:
+     * definito posts come l insieme dei post,
+     * metionedUsers come l insieme degli autori di questi post,
+     * social come la funzione che associa ad ogni utente i relativi seguiti,
+     * influencers come la funzione che associa ad ogni utente, il numero di followers,
+     * p1 ∈ Post come il post appena creato e p2 ∈ Post come il Post a cui viene messo il like:
      * posts.put(p1) ∧ metionedUsers.add(p1.author) ∧ social.get(p2.author).add(p1.author)
      * ∧ influencers.put(p2.author, social.get(p2.author).size()).
      * Definisco un like, come:
      * ∃p1,p2 ∈ posts . p1.author=a ∧ p2.author=b ∧ a≠b ∧ p1.id=x ∈ N ∧ p2.text.startsWith("like:" + x) -> f(a,b)
-     * f:(u x u)->(u x followers)
+     * f:(u x u)->(u x seguiti)
      * dato a ⊆ u ∧ b ⊆ u
      * f(a,b)=ab
      *

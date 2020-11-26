@@ -23,7 +23,7 @@ public class SocialNetwork implements ISocial {
      *                                                  metionedusers:[0, metionedusers.size]->(String)=
      *                                                      { u | u ∈ String ∧ (∃p | p ∈ posts.values ∧ u = p.author) }
      * seguiti(a,b) se ∃p1,p2 ∈ posts.values |
-     * p1.author=a ∧ p2.author=b ∧ a≠b ∧ p1.id=x ∈ N ∧ p2.text.contains("like:" + x) -> a è seguito da b
+     * p1.author=a ∧ p2.author=b ∧ a≠b ∧ ∃x ∈ N (p1.id=x ∧ p2.text.contains("like:" + x)) -> a è seguito da b
      *
      * MODIFIES: this
      */
