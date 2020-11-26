@@ -25,6 +25,9 @@ public final class Post implements IPost {
         this.text = text;
         if(text.length() > 140)
             throw new SocialPostArgumentException("Testo troppo lungo");
+        try {
+            Thread.sleep(10);   //per non avere timestamp uguali alla creazione di un Post
+        }catch(InterruptedException ignored){}
         this.timestamp = new Timestamp(System.currentTimeMillis());
     }
 

@@ -2,22 +2,21 @@ package com.SocialNetwork;
 
 import com.SocialNetwork.CustomException.*;
 import com.SocialNetwork.Interfaces.ISocial;
-
 import java.util.*;
 
 public class SocialNetwork implements ISocial {
     private final Map<String, Set<String>> social;          //utenti registrati + seguiti
-    private final HashMap<String, Set<String>> followers; //utenti registrati + followers
+    private final HashMap<String, Set<String>> followers;   //utenti registrati + followers
     private final HashMap<Integer, Post> posts;             //post approvati
     private final Set<String> metionedUsers;                //utenti che hanno postato almeno una volta
 
     private int id_posts = 1;
 
     /*
-     * AF: a(social,influencers,posts,metionedusers) = (social:(String) -> (seguiti)
+     * AF: a(social,followers,posts,metionedusers) = (social:(String) -> (seguiti)
      *                                                      f(u) = { seguiti da u } se u ∈ social.keySet(),
-     *                                                  influencers:(String) -> (Integer)
-     *                                                      f(x)= (social(x).size) se x ∈ social.keySet(),
+     *                                                  followers:(String) -> (followers)
+     *                                                      f(u) = { followers di u } se u ∈ social.keySet(),
      *                                                  posts:(Integer)->(Post),
      *                                                      f(y)= {x ∈ Post | ∃x.author ∈ social.keySet}
      *                                                  metionedusers:[0, metionedusers.size]->(String)=
@@ -177,9 +176,6 @@ public class SocialNetwork implements ISocial {
         posts.put(id_posts, newPost);   //pubblico il post
         metionedUsers.add(author);
         id_posts++;
-        try {
-            Thread.sleep(10);   //per non avere timestamp uguali alla creazione di un Post
-        }catch(InterruptedException ignored){}
         return newPost;
     }
 
