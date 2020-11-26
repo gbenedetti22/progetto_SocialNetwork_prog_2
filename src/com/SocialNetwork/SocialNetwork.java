@@ -6,10 +6,10 @@ import com.SocialNetwork.Interfaces.ISocial;
 import java.util.*;
 
 public class SocialNetwork implements ISocial {
-    private final Map<String, Set<String>> social;      //utenti registrati + seguiti
-    private final HashMap<String, Integer> influencers; //utenti registrati + numero di followers
-    private final HashMap<Integer, Post> posts;          //post approvati
-    private final Set<String> metionedUsers;            //utenti che hanno postato almeno una volta
+    private final Map<String, Set<String>> social;          //utenti registrati + seguiti
+    private final HashMap<String, Set<String>> followers; //utenti registrati + followers
+    private final HashMap<Integer, Post> posts;             //post approvati
+    private final Set<String> metionedUsers;                //utenti che hanno postato almeno una volta
 
     private int id_posts = 1;
 
@@ -30,7 +30,7 @@ public class SocialNetwork implements ISocial {
     public SocialNetwork() {
         social = new HashMap<>();
         posts = new HashMap<>();
-        influencers = new HashMap<>();
+        followers = new HashMap<>();
         metionedUsers = new HashSet<>();
     }
 
@@ -75,6 +75,11 @@ public class SocialNetwork implements ISocial {
     }
 
     public List<String> influencers() {
+        HashMap<String, Integer> influencers = new HashMap<>();
+        for(Map.Entry<String, Set<String>> user : followers.entrySet()){
+            influencers.put(user.getKey(), user.getValue().size());
+        }
+
         List<Map.Entry<String, Integer>> sorted_influencers = new ArrayList<>(influencers.entrySet());
         sorted_influencers.sort(Map.Entry.comparingByValue());  //ordino gli utenti per ordine crescente
                                                                 // in base al numero di follower che hanno
@@ -163,8 +168,7 @@ public class SocialNetwork implements ISocial {
                         throw new SocialFollowBackException("Non ci si può seguire da soli su questo Social!");
 
                     social.get(author).add(post.getAuthor());
-                    influencers.put(post.getAuthor(), influencers.get(post.getAuthor())+1); //aggiorno il numero di followers
-                                                                                            //di post.getAuthor()
+                    followers.get(post.getAuthor()).add(author); //aggiorno i followers di post.getAuthor()
                 }
             } catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {}
         }
@@ -188,7 +192,7 @@ public class SocialNetwork implements ISocial {
         }
 
         social.put(username, new HashSet<>());
-        influencers.put(username, 0);   //all inizio, l utente appena registrato non segue nessuno
+        followers.put(username, new HashSet<>());   //all inizio, l utente appena registrato non ha followers
         return username;
     }
 

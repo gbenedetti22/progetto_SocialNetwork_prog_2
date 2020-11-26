@@ -8,7 +8,7 @@ public class Main {
     private final static SocialNetwork socialNetwork = new SocialNetwork();
 
     public static void main(String[] args) throws Exception {
-        Post p = new Post(10, "utente1", "like:1");
+        Post p = new Post(100, "utente1", "like:1");
         String crash = socialNetwork.createUser("crash");
         String coco = socialNetwork.createUser("coco");
         String cortex = socialNetwork.createUser("cortex");
@@ -23,6 +23,8 @@ public class Main {
         Post like3 = socialNetwork.post(cortex, "like:abcd");//viene preso come Post normale
         Post like4 = socialNetwork.post(brio, "like:" + crashPost.getId());
         Post like5 = socialNetwork.post(coco, "like:" + crashPost.getId());
+        Post like6 = socialNetwork.post(crash, "like:" + cortexPost.getId()); //non viene contato, essendo duplice
+        Post like7 = socialNetwork.post(crash, "like:" + cortexPost.getId()); //non viene contato, essendo duplice
 
         System.out.print("Social: ");
         socialNetwork.printSocial();  //stampa tutti gli utenti con i relativi followers
